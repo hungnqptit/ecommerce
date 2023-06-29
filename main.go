@@ -7,13 +7,14 @@ import (
 	"ecommerce/routes"
 	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 	"os"
 )
 
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8000"
+		port = "7660"
 	}
 	app := controller.NewApplication(database.ProductData(database.Client, "Products"), database.UserData(database.Client, "Users"))
 
@@ -25,4 +26,5 @@ func main() {
 	router.GET("/add_to_cart", app.AddToCart())
 	router.GET("/remove_item", app.RemoveItemFromCart())
 	log.Fatal(router.Run(":" + port))
+	log.Fatalln(http.ListenAndServe(":"+"7660", nil))
 }
