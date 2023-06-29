@@ -5,20 +5,21 @@ import (
 	"ecommerce/database"
 	"ecommerce/middleware"
 	"ecommerce/routes"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 )
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8000"
 	}
+	fmt.Println("Running on port ", port)
 	app := controller.NewApplication(database.ProductData(database.Client, "Products"), database.UserData(database.Client, "Users"))
-
 	router := gin.New()
-	gin.SetMode(gin.ReleaseMode)
 	router.Use(gin.Logger())
 	database.DBSet()
 	routes.UserRoutes(router)
