@@ -14,8 +14,9 @@ import (
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	port := os.Getenv("PORT")
+
 	if port == "" {
-		port = "8000"
+		log.Fatal("$PORT must be set")
 	}
 	fmt.Println("Running on port ", port)
 	app := controller.NewApplication(database.ProductData(database.Client, "Products"), database.UserData(database.Client, "Users"))
@@ -26,5 +27,5 @@ func main() {
 	router.Use(middleware.Authentication())
 	router.GET("/add_to_cart", app.AddToCart())
 	router.GET("/remove_item", app.RemoveItemFromCart())
-	log.Fatal(router.Run())
+	log.Fatal(router.Run(":" + port))
 }
