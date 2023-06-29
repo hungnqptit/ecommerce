@@ -13,12 +13,6 @@ import (
 
 func main() {
 	gin.SetMode(gin.ReleaseMode)
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
-	fmt.Println("Running on port ", port)
 	app := controller.NewApplication(database.ProductData(database.Client, "Products"), database.UserData(database.Client, "Users"))
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -27,5 +21,12 @@ func main() {
 	router.Use(middleware.Authentication())
 	router.GET("/add_to_cart", app.AddToCart())
 	router.GET("/remove_item", app.RemoveItemFromCart())
-	log.Fatal(router.Run(":" + port))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	fmt.Println("Running on port ", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Panicf("error: %s", err)
+	}
 }
