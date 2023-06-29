@@ -11,5 +11,4 @@ func UserRoutes(incomingRoutes *gin.Engine) {
 	//incomingRoutes.POST("admin/add_product", controllers.ProductViewerAdmin())
 	//incomingRoutes.POST("users/product_view", controllers.SearchProduct())
 	//incomingRoutes.POST("users/search", controllers.Search())
-
 }

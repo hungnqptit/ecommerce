@@ -18,7 +18,7 @@ func main() {
 	if port == "" {
 		port = "8000"
 	}
-	fmt.Println("Running on port ", port)
+	fmt.Println("Running on port ", os.Getenv("PORT"))
 	app := controller.NewApplication(database.ProductData(database.Client, "Products"), database.UserData(database.Client, "Users"))
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -27,6 +27,6 @@ func main() {
 	router.Use(middleware.Authentication())
 	router.GET("/add_to_cart", app.AddToCart())
 	router.GET("/remove_item", app.RemoveItemFromCart())
-	log.Fatal(router.Run(":" + port))
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(router.Run(":" + os.Getenv("PORT")))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), nil))
 }
