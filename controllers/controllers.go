@@ -43,7 +43,7 @@ func VerifyPassword(userPassword string, givenPassword string) (bool, string) {
 
 func SignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(context.Background(), 1000*time.Second)
 		defer cancel()
 
 		var user models.User
@@ -102,7 +102,7 @@ func SignUp() gin.HandlerFunc {
 
 func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(context.Background(), 1000*time.Second)
 		defer cancel()
 
 		var user models.User
@@ -148,7 +148,7 @@ func Login() gin.HandlerFunc {
 func SearchProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var productList []models.Product
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(context.Background(), 1000*time.Second)
 		defer cancel()
 
 		cursor, err := ProductCollection.Find(ctx, bson.D{})
@@ -189,7 +189,7 @@ func SearchProductByQuery() gin.HandlerFunc {
 			return
 		}
 
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		var ctx, cancel = context.WithTimeout(context.Background(), 1000*time.Second)
 		defer cancel()
 
 		searchQueryDb, err := ProductCollection.Find(ctx, bson.M{"productionName": bson.M{"$regex": queryParam}})
