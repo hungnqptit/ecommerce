@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -27,4 +28,5 @@ func main() {
 	router.GET("/add_to_cart", app.AddToCart())
 	router.GET("/remove_item", app.RemoveItemFromCart())
 	log.Fatal(router.Run(":" + port))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
