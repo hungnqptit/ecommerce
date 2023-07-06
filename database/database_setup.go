@@ -53,3 +53,8 @@ func ProductData(client *mongo.Client, collectionName string) *mongo.Collection 
 	var productionCollection *mongo.Collection = client.Database("Ecommerce").Collection(collectionName)
 	return productionCollection
 }
+
+func ProductDataTest(client *mongo.Client, collectionName string) *mongo.Collection {
+	var productionCollection *mongo.Collection = client.Database("Ecommerce").Collection(collectionName)
+	return productionCollection
+}
