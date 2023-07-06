@@ -10,15 +10,31 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"time"
 )
 
+type Application struct {
+	prodCollection *mongo.Collection
+	userCollection *mongo.Collection
+}
+
+func NewApplication(prodCollection, userCollection *mongo.Collection) *Application {
+	return &Application{
+		prodCollection: prodCollection,
+		userCollection: userCollection,
+	}
+}
+
 var UserCollection = database.UserData(database.Client, "Users")
 
 var ProductCollection = database.UserData(database.Client, "Products")
+
+var SavingInfoCollection = database.SavingInfoData(database.Client)
 
 var Validate = validator.New()
 
@@ -218,6 +234,121 @@ func SearchProductByQuery() gin.HandlerFunc {
 	}
 }
 
-// func ProductViewerAdmin() gin.HandlerFunc {
-//
-// }
+type AddSavingRequest struct {
+	UserID       string  `json:"userID"`
+	Amount       float64 `json:"amount"`
+	Category     int64   `json:"category"`
+	TermDuration int64   `json:"termDuration"`
+	SavingName   string  `json:"savingName"`
+}
+
+func AddSavingItem() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		request := &AddSavingRequest{}
+		if err := c.BindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if request.UserID == "" {
+			fmt.Println("UserID must not be null")
+			c.IndentedJSON(http.StatusBadRequest, "UserID must not be null")
+			return
+		}
+
+		if request.SavingName == "" {
+			fmt.Println("Saving name must not be null")
+			c.IndentedJSON(http.StatusBadRequest, "Saving name must not be null")
+			return
+		}
+
+		//if err != nil {
+		//	fmt.Println("Input amount must be number")
+		//	c.IndentedJSON(http.StatusBadRequest, "Input amount must be number")
+		//	return
+		//}
+		//request.Amount = inputSavingMoney
+
+		if request.Category >= 3 || request.Category < 0 {
+			fmt.Println("Category invalid")
+			c.IndentedJSON(http.StatusBadRequest, "Category invalid")
+			return
+		}
+
+		if request.TermDuration < 0 {
+			fmt.Println("Term invalid")
+			c.IndentedJSON(http.StatusBadRequest, "Category invalid")
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		var foundUser models.User
+		objectId, err := primitive.ObjectIDFromHex(request.UserID)
+		if err != nil {
+			log.Println("Invalid id")
+			c.IndentedJSON(http.StatusBadRequest, "Invalid user ID")
+		}
+		errFind := UserCollection.FindOne(ctx, bson.D{primitive.E{Key: "_id", Value: objectId}}).Decode(&foundUser)
+		if errFind != nil {
+			fmt.Println("UserID not true")
+			c.IndentedJSON(http.StatusBadRequest, "UserID not true")
+			return
+		}
+		fmt.Println(foundUser)
+		if *foundUser.Money < request.Amount {
+			fmt.Println("Account money insufficient")
+			c.IndentedJSON(http.StatusInternalServerError, "Account money insufficient")
+			return
+		}
+		var foundedRates []models.SearchedInfo
+		cursor, errFindRate := SavingInfoCollection.Aggregate(ctx,
+			mongo.Pipeline{
+				bson.D{{"$unwind", bson.D{{"path", "$rates"}}}},
+				bson.D{{"$match", bson.D{{"rates.termDuration", request.TermDuration}}}},
+			})
+		err = cursor.All(ctx, &foundedRates)
+		if err != nil {
+			log.Println(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		defer cursor.Close(ctx)
+		//errFindCursor.Decode(&foundedRates)
+		if errFindRate != nil {
+			fmt.Println("Term duration not valid")
+			c.IndentedJSON(http.StatusInternalServerError, "Term duration not valid")
+			return
+		}
+
+		newSaving := models.Saving{
+			SavingID:        primitive.NewObjectID(),
+			SavingAmount:    &request.Amount,
+			SavingTermByDay: &request.TermDuration,
+			SavingRate:      foundedRates[0].Rates.Rate,
+			SavingName:      &request.SavingName,
+			CategoryType:    &request.Category,
+		}
+		errValidate := Validate.Struct(newSaving)
+		if errValidate != nil {
+			fmt.Println("Saving object invalid")
+			c.IndentedJSON(http.StatusInternalServerError, "Data invalid")
+			return
+		}
+		foundUser.SavingList = append(foundUser.SavingList, newSaving)
+		remainingMoney := *foundUser.Money - request.Amount
+		foundUser.Money = &remainingMoney
+		filter := bson.M{"userid": request.UserID}
+
+		upsert := true
+		opt := options.UpdateOptions{Upsert: &upsert}
+		_, errUpdate := database.UserData(database.Client, "Users").UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: foundUser}}, &opt)
+		defer cancel()
+		if errUpdate != nil {
+			log.Panicln(err)
+		}
+		c.IndentedJSON(200, "Saving create successfully")
+	}
+}

@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+type AddSavingRequest struct {
+	UserID       string  `json:"userID"`
+	Amount       float64 `json:"amount"`
+	Category     int64   `json:"category"`
+	TermDuration int64   `json:"termDuration"`
+	SavingName   string  `json:"savingName"`
+}
+
 type User struct {
 	ID            primitive.ObjectID `json:"_id" bson:"_id"`
 	FirstName     *string            `json:"firstName" validate:"required,min=2,max=30"`
@@ -14,12 +22,40 @@ type User struct {
 	Phone         *string            `json:"phone" validate:"required"`
 	Token         *string            `json:"token" `
 	RefreshToken  *string            `json:"refreshToken"`
+	Money         *float64           `json:"money"`
+	AccountNo     *string            `json:"accountNo"`
 	CreateAt      time.Time          `json:"createAt"`
 	UpdatedAt     time.Time          `json:"updatedAt"`
 	UserId        string             `json:"userId"`
 	UserCart      []ProductUser      `json:"userCart" bson:"userCart"`
 	AddressDetail []Address          `json:"address" bson:"address"`
 	OrderStatus   []Order            `json:"orders" bson:"orders"`
+	SavingList    []Saving           `json:"savingList" bson:"savingList"`
+}
+
+type Saving struct {
+	SavingID        primitive.ObjectID `json:"_id" bson:"_id"`
+	SavingAmount    *float64           `json:"savingAmount" validate:"required"`
+	SavingTermByDay *int64             `json:"price" validate:"required"`
+	SavingRate      *float64           `json:"savingRate" validate:"required"`
+	SavingName      *string            `json:"savingName" validate:"required,min=6,max=30"`
+	CategoryType    *int64             `json:"categoryType" validate:"required"`
+}
+
+type SavingInfo struct {
+	SavingInfoID primitive.ObjectID `json:"_id" bson:"_id"`
+	Rates        []SavingRate       `json:"rates" bson:"rates"`
+}
+
+type SearchedInfo struct {
+	SavingInfoID primitive.ObjectID `json:"_id" bson:"_id"`
+	Rates        SavingRate         `json:"rates" bson:"rates"`
+}
+
+type SavingRate struct {
+	SavingID     primitive.ObjectID `json:"_id" bson:"_id"`
+	TermDuration *uint64            `json:"termDuration"`
+	Rate         *float64           `json:"rate"`
 }
 
 type Product struct {

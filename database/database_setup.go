@@ -10,7 +10,10 @@ import (
 )
 
 func DBSet() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb+srv://hungnqptit:dnBSb1VDOBKc8zjT@clusterflutter.1xkdsh1.mongodb.net/"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(
+		"mongodb://localhost:27017",
+		//"mongodb+srv://hungnqptit:dnBSb1VDOBKc8zjT@clusterflutter.1xkdsh1.mongodb.net/"
+	))
 
 	if err != nil {
 		log.Fatal(err)
@@ -38,6 +41,11 @@ var Client *mongo.Client = DBSet()
 
 func UserData(client *mongo.Client, collectionName string) *mongo.Collection {
 	var collection *mongo.Collection = client.Database("Ecommerce").Collection(collectionName)
+	return collection
+}
+
+func SavingInfoData(client *mongo.Client) *mongo.Collection {
+	var collection *mongo.Collection = client.Database("Ecommerce").Collection("SavingInfo")
 	return collection
 }
 
